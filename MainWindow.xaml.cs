@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -22,8 +23,8 @@ namespace Labhelper
 
         Dictionary<string, Brush> br = new()
         {
-            { "B", Brushes.LightBlue }, 
-            { "Y", Brushes.Yellow }, 
+            { "B", Brushes.LightBlue },
+            { "Y", Brushes.Yellow },
             { "G", Brushes.LightGreen },
             { "V", Brushes.Violet },
             { "P", Brushes.Pink },
@@ -36,7 +37,7 @@ namespace Labhelper
             { "T", Brushes.Turquoise }
         };
 
- 
+
 
         public MainWindow()
         {
@@ -53,17 +54,18 @@ namespace Labhelper
 
             // <EXAMPLE INPUT>
 
-            string[][] samples = new []
+            string[][] samples = new[]
             {
                 new string[] { "Sample-1", "Sample-2"},
-                new string[] { "Sample-1", "Sample-2", "Sample-3", "Sample-5", "Sample-6", "Sample-7", "Sample-9","Sample-10", "Sample-11", "Sample-12", "Sample-13", "Sample-14", "Sample-15", "Sample-16", "Sample-17", "Sample-18"}, 
-                new string[] { "Sample-1","Sample-2", "Sample-3"},
-                new string[] { "Sample-2", "Sample-1","Sample-5", "Sample-7", "Sample-6", "Sample-9","Sample-10", "Sample-3" },
+                new string[] { "Sample-1", "Sample-2", "Sample-3", "Sample-4", "Sample-5", "Sample-6", "Sample-7", "Sample-9","Sample-10", "Sample-11", "Sample-12", "Sample-13", "Sample-14", "Sample-15", "Sample-16", "Sample-17", "Sample-18"},
+                 //new string[] { "Sample-1","Sample-2", "Sample-3"},
+                new string[] { "Sample-1","Sample-2", "Sample-3", "Sample-4", "Sample-5", "Sample-6", "Sample-7", "Sample-9","Sample-10", "Sample-11", "Sample-12", "Sample-13"},
+                new string[] { "Sample-1", "Sample-2","Sample-5", "Sample-7", "Sample-6", "Sample-9","Sample-10", "Sample-11" },
                 new string[] { "Sample-1" }
             };
 
 
-            string[][] reagents = new [] {
+            string[][] reagents = new[] {
                     new string[] {"<Pink>", "<Green>", "<Noon>"},
                     new string[] {"<Blue>", "<ZReagent>", "<XReagent>", "<DReagent>"},
                     new string[] {"<Cyan>", "<Violet>", "<Reagent-A>"},
@@ -88,9 +90,9 @@ namespace Labhelper
         {
             List<string> errors = new();
 
-            // Plate limit
+            // Plate limit check
 
-            if(plate_limit <= 0) { errors.Add("> Plate limit has to be greater than 0!"); }
+            if (plate_limit <= 0) { errors.Add("> Plate limit has to be greater than 0!"); }
 
 
             // Plate size check
@@ -133,9 +135,9 @@ namespace Labhelper
 
             bool samplesUnique = true;
 
-            foreach(string[] s in samples)
+            foreach (string[] s in samples)
             {
-                if(s.Length != s.Distinct().Count())
+                if (s.Length != s.Distinct().Count())
                 {
                     samplesUnique = false;
                 }
@@ -148,10 +150,7 @@ namespace Labhelper
             if ((samples.GetLength(0) != reagents.GetLength(0)) || (reagents.GetLength(0) != replicates.GetLength(0)))
             {
                 errors.Add(string.Format("> Samples/reagents/replicates lengths mismatch ! ({0}/{1}/{2})", samples.GetLength(0), reagents.GetLength(0), replicates.GetLength(0)));
-            }
 
-            try
-            {
                 // Plate capacity check
                 int total = 0;
 
@@ -159,15 +158,7 @@ namespace Labhelper
                 {
                     total += samples[i].GetLength(0) * reagents[i].GetLength(0) * replicates[i];
                 }
-            }
-            catch (IndexOutOfRangeException)
-            {
-                // Ignore exception on samples & reagents lengths mismatch
-            }
-            catch (Exception)
-            {
-                // Catch to show errors
-                errors.Add("> Not enough plates !");
+
             }
 
             return errors;
@@ -180,20 +171,27 @@ namespace Labhelper
 
             if (er.Count > 0)
             {
-                string errorText = "Fix the following error(s) before proceeding:" + Environment.NewLine + Environment.NewLine;
+                //string errorText = "Fix the following error(s) before proceeding:" + Environment.NewLine + Environment.NewLine;
                 string caption = "Warning";
+
+                StringBuilder errorText = new("Fix the following error(s) before proceeding:");
+                errorText.Append(Environment.NewLine);
+                errorText.Append(Environment.NewLine);
 
                 MessageBoxButton b = MessageBoxButton.OK;
                 MessageBoxImage im = MessageBoxImage.Warning;
 
                 foreach (string s in er)
                 {
-                    errorText += s + Environment.NewLine;
+                    errorText.Append(s);
+                    errorText.Append(Environment.NewLine);
                 }
 
-                errorText += Environment.NewLine + Environment.NewLine + "Press OK to exit.";
+                errorText.Append(Environment.NewLine);
+                errorText.Append(Environment.NewLine);
+                errorText.Append("Press OK to exit.");
 
-                MessageBox.Show(errorText, caption, b, im, MessageBoxResult.OK);
+                MessageBox.Show(errorText.ToString(), caption, b, im, MessageBoxResult.OK);
 
                 Application.Current.Shutdown();
                 return null;
@@ -201,19 +199,18 @@ namespace Labhelper
 
 
 
-
-            Random rnd = new();
-
             Dictionary<string, int> reagentIndices = new();
             Dictionary<string, int> ReagentSpaces = new();
 
             // Initialize plates
             plates = new Plate[plate_limit];
 
-            if (plate_size == 96){
+            if (plate_size == 96)
+            {
                 for (int i = 0; i < plate_limit; i++) { plates[i] = new Plate(8, 12); }
             }
-            else{
+            else
+            {
                 for (int i = 0; i < plate_limit; i++) { plates[i] = new Plate(16, 24); }
             }
 
@@ -233,27 +230,11 @@ namespace Labhelper
             {
                 foreach (string re in reagents[i])
                 {
-                    ReagentSpaces.Add(re, samples[i].GetLength(0)); 
+                    ReagentSpaces.Add(re, samples[i].GetLength(0));
                 }
             }
 
 
-            
-            // Sort by value
-            var res = from e in ReagentSpaces
-                      orderby e.Value descending
-                      select e;
-
-
-            // Assign back to ReagentSpaces
-            ReagentSpaces = res.Select(e => (e.Key, e.Value))
-                                           .ToDictionary(e => e.Key, e => e.Value);
-
-
-
-            int rows = plates[0].Rows;
-            int columns = plates[0].Columns;
-            int limit = ReagentSpaces.Count;
             int plateIndex = 0;
             int exp_index = 0;
 
@@ -269,7 +250,7 @@ namespace Labhelper
                 exp_index = reagentIndices[k];
 
                 // Is shape too wide and too tall ?
-                if((replicates[exp_index] > plates[plateIndex].Columns) && (samples[exp_index].GetLength(0) > plates[plateIndex].Rows))
+                if ((replicates[exp_index] > plates[plateIndex].Columns) && (samples[exp_index].GetLength(0) > plates[plateIndex].Rows))
                 {
                     List<Shape> tmp = new();
 
@@ -294,12 +275,12 @@ namespace Labhelper
                 }
 
                 // Does shape exceed plate width ?
-                else if(replicates[exp_index] > plates[plateIndex].Columns)
+                else if (replicates[exp_index] > plates[plateIndex].Columns)
                 {
                     // Create one large shape
                     Shape largeShape = new(k,
-                                           CreateShape(k, 
-                                                       samples[exp_index], 
+                                           CreateShape(k,
+                                                       samples[exp_index],
                                                        replicates[exp_index])
                                            );
 
@@ -307,7 +288,7 @@ namespace Labhelper
 
                     var shp = largeShape.SplitByWidth(plates[0].Columns);
 
-                    for (int i=0; i< shp.Count; i++)
+                    for (int i = 0; i < shp.Count; i++)
                     {
                         remaining.Add(shp[i]);
                     }
@@ -326,12 +307,12 @@ namespace Labhelper
                     // Split into multiple
                     var shp = largeShape.SplitByHeight(plates[0].Rows);
 
-                    for(int i=0; i < shp.Count; i++)
+                    for (int i = 0; i < shp.Count; i++)
                     {
                         remaining.Add(shp[i]);
                     }
                 }
-                
+
                 else
                 {
                     // Shape does not exceed single plate dimensions
@@ -348,9 +329,9 @@ namespace Labhelper
             remaining = remaining.OrderByDescending(x => x.GetRows() * x.GetColumns()).ToList();
 
 
-            foreach(Shape currentShape in remaining)
+            foreach (Shape currentShape in remaining)
             {
-                for(int i=remaining.IndexOf(currentShape); i < remaining.Count; i++)
+                for (int i = remaining.IndexOf(currentShape); i < remaining.Count; i++)
                 {
                     Shape shp = remaining.ElementAt(i);
                 }
@@ -361,7 +342,7 @@ namespace Labhelper
                 bool shouldBreak = false;
                 bool placedShape = false;
 
-                for(int i=0; i < plates.Length; i++)
+                for (int i = 0; i < plates.Length; i++)
                 {
                     if (shouldBreak) break;
 
@@ -394,7 +375,7 @@ namespace Labhelper
                     }
                 }
 
-                if(!placedShape) skipped.Add(currentShape);
+                if (!placedShape) skipped.Add(currentShape);
             }
 
             // Placement done
@@ -415,13 +396,13 @@ namespace Labhelper
                                   " - " +
                                   skipped[i].GetRows() +
                                   " samples,  " +
-                                  skipped[i].GetColumns()+
+                                  skipped[i].GetColumns() +
                                   " replicates" +
                                   Environment.NewLine);
                 }
 
 
-                // Discard messagebox result 
+                // Discard result 
                 _ = MessageBox.Show(errorText, caption, b, im, MessageBoxResult.OK);
             }
 
@@ -441,33 +422,34 @@ namespace Labhelper
 
             Console.WriteLine("result = [");
 
-            for (int i=0; i < ret.GetLength(0); i++)  // Plates
+            for (int i = 0; i < ret.GetLength(0); i++)  // Plates
             {
                 ret[i] = new string[plates[0].Rows][][];
 
                 Console.WriteLine("  [");
 
-                for(int j=0; j < ret[i].GetLength(0); j++) // Rows
+                for (int j = 0; j < ret[i].GetLength(0); j++) // Rows
                 {
                     Console.Write("    [");
 
                     ret[i][j] = new string[plates[0].Columns][];
 
-                    for(int k = 0; k < ret[i][j].GetLength(0); k++) // Columns
+                    for (int k = 0; k < ret[i][j].GetLength(0); k++) // Columns
                     {
                         ret[i][j][k] = new string[2];  // Pair in each well
 
-                        if(plates[i].Content[j][k] != null)
+                        if (plates[i].Content[j][k] != null)
                         {
                             // Set [0] to sample name
                             ret[i][j][k][0] = plates[i].Content[j][k].IndexOf('<') != -1 ? plates[i].Content[j][k][..(plates[i].Content[j][k].IndexOf('<'))] : "n/a";
-                            
+
                             // Set [1] to reagent name
                             ret[i][j][k][1] = plates[i].Content[j][k].IndexOf('<') != -1 ? plates[i].Content[j][k][plates[i].Content[j][k].IndexOf('<')..] : "n/a";
 
                             Console.Write("['" + ret[i][j][k][0] + "', '" + ret[i][j][k][1] + "'], ");
                         }
-                        else {
+                        else
+                        {
                             Console.Write("null, ");
                         }
                     }
@@ -489,9 +471,9 @@ namespace Labhelper
         {
             string[,] canvas = new string[samples.Length, rep];
 
-            for(int y = 0; y < samples.Length; y++)
+            for (int y = 0; y < samples.Length; y++)
             {
-                for(int x = 0; x < rep; x++)
+                for (int x = 0; x < rep; x++)
                 {
                     canvas[y, x] = samples[y] + reagent;
                 }
@@ -513,12 +495,13 @@ namespace Labhelper
             int fontSize;
 
 
-            for (int i=0; i< pl.Length; i++)
+            for (int i = 0; i < pl.Length; i++)
             {
                 Plate p = pl[i];
 
                 // Empty plates should not be accessible in results window
-                if (p.Occupied() == 0) {
+                if (p.Occupied() == 0)
+                {
                     emptyPlates++;
                     continue;
                 }
@@ -549,7 +532,7 @@ namespace Labhelper
                 }
 
 
-                for (int y = 0; y < p.Rows ; y++)
+                for (int y = 0; y < p.Rows; y++)
                 {
                     for (int x = 0; x < p.Columns; x++)
                     {
@@ -571,16 +554,16 @@ namespace Labhelper
                             t.Text = p.Content[y][x].IndexOf('<') != -1 ? p.Content[y][x][..(p.Content[y][x].IndexOf('<'))] : "n/a";
 
                             // Parse color from dictionary
-                            string k = p.Content[y][x].IndexOf('<') != -1 ? p.Content[y][x][p.Content[y][x].IndexOf('<')+1].ToString() : "";
+                            string k = p.Content[y][x].IndexOf('<') != -1 ? p.Content[y][x][p.Content[y][x].IndexOf('<') + 1].ToString() : "";
 
                             if (!br.ContainsKey(k))
                             {
                                 // Assign random color
-                                br[k] = new SolidColorBrush(Color.FromRgb((byte)rand.Next(0, 256), (byte)rand.Next(0, 256), (byte)rand.Next(0, 256)));     
+                                br[k] = new SolidColorBrush(Color.FromRgb((byte)rand.Next(0, 256), (byte)rand.Next(0, 256), (byte)rand.Next(0, 256)));
                             }
-                            
+
                             t.Background = br[k];
-                        }       
+                        }
 
                         Grid.SetRow(t, y);
                         Grid.SetColumn(t, x);
@@ -591,12 +574,12 @@ namespace Labhelper
 
 
                 // Make last row black
-                for(int x=0; x < p.Columns; x++)
+                for (int x = 0; x < p.Columns; x++)
                 {
-                    TextBlock t = new();                   
+                    TextBlock t = new();
                     t.Text = "";
                     t.Background = Brushes.Black;
-                    
+
                     Grid.SetRow(t, p.Rows);
                     Grid.SetColumn(t, x);
 
@@ -625,15 +608,15 @@ namespace Labhelper
 
 
                 // Do not add unusable buttons
-                if(i != 0)
+                if (i != 0)
                 {
                     g.Children.Add(previous);
                 }
-                
-                if(i != (plates.Length - 1))
+
+                if (i != (plates.Length - 1))
                 {
                     // Only add "next" button when there are more plates to show
-                    if(pl[i + 1].Occupied() > 0)
+                    if (pl[i + 1].Occupied() > 0)
                     {
                         g.Children.Add(next);
                     }
@@ -645,7 +628,7 @@ namespace Labhelper
 
         void ShowResults()
         {
-            if(idx < all_grids.Count)
+            if (idx < all_grids.Count)
             {
                 Content = all_grids[idx];
                 Title = "Results page " + (idx + 1).ToString() + "/" + plates.Length;
@@ -654,9 +637,9 @@ namespace Labhelper
                 {
                     Title += "    (" + emptyPlates + " plates are empty...)";
                 }
-                
+
                 Show();
-            }           
+            }
         }
 
         void Next_Click(object sender, RoutedEventArgs e)
@@ -691,10 +674,11 @@ namespace Labhelper
             Columns = c;
             Content = new string[r][];
 
-            for (int i = 0; i < Rows; i++) {
+            for (int i = 0; i < Rows; i++)
+            {
                 Content[i] = new string[Columns];
             }
-           
+
             // Initialize each well with null
 
             for (int y = 0; y < Rows; y++)
@@ -728,7 +712,7 @@ namespace Labhelper
 
                     if (x >= Columns) { return false; }
 
-                    if(Content[y][x] != null){ return false; }
+                    if (Content[y][x] != null) { return false; }
 
                     y++;
                 }
@@ -744,17 +728,17 @@ namespace Labhelper
         /// </summary>
         public void PlaceShape(int x, int y, Shape shp)
         {
-            if(Content[y][x] != null) { return; }
+            if (Content[y][x] != null) { return; }
 
             string[,] shape = shp.Content;
 
             int _y = y;
 
-            for(int i = 0; i < shape.GetLength(1); i++)  // Columns
+            for (int i = 0; i < shape.GetLength(1); i++)  // Columns
             {
-                for(int j = 0; j < shape.GetLength(0); j++)  // Rows
+                for (int j = 0; j < shape.GetLength(0); j++)  // Rows
                 {
-                    Content[y][x] = shape[j,i];
+                    Content[y][x] = shape[j, i];
                     y++;
                 }
                 y = _y;
@@ -782,7 +766,7 @@ namespace Labhelper
         /// <summary>
         /// Returns locations of free spaces
         /// </summary>
-        public (int,int)[] GetFreeSpaces()
+        public (int, int)[] GetFreeSpaces()
         {
             int c = 0;
             (int, int)[] spaces = new (int, int)[Size() - Occupied()];
@@ -791,8 +775,9 @@ namespace Labhelper
             {
                 for (int x = 0; x < Columns; x++)
                 {
-                    if (Content[y][x] == null) {
-                        spaces[c] = (x,y);
+                    if (Content[y][x] == null)
+                    {
+                        spaces[c] = (x, y);
                         c++;
                     }
                 }
@@ -814,7 +799,7 @@ namespace Labhelper
         public string Reagent { get; }
 
         public Shape(string r, string[,] co)
-        { 
+        {
             Reagent = r;
             Content = co;
         }
